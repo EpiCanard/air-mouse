@@ -19,6 +19,7 @@
 LSM6DS3 myIMU(I2C_MODE, 0x6A);  //I2C device address 0x6A
 
 const int pin = 9;
+bool disable = false;
 
 
 // HID report descriptor using TinyUSB's template
@@ -53,18 +54,35 @@ void setup() {
 
   // wait until device mounted
   while (!TinyUSBDevice.mounted()) delay(1);
-
+  myIMU.settings.accelSampleRate = 416;
+  myIMU.settings.accelRange = 2;
   //Call .begin() to configure the IMUs
   if (myIMU.begin() != 0) {
     Serial.println("Device error");
   } else {
     Serial.println("Device OK!");
   }
+  
+  // myIMU.writeRegister(LSM6DS3_ACC_GYRO_CTRL1_XL, 0x60);    // 0110 0000 - enable accelerometer - ODR[4] - FS[2] - 00
+  myIMU.writeRegister(LSM6DS3_ACC_GYRO_TAP_CFG1, 0x88);    // 1000 1110 - 8E (88)
+  myIMU.writeRegister(LSM6DS3_ACC_GYRO_TAP_THS_6D, 0x89);  // 1000 1100 - 8C (= 12 * FS_XL / 2⁵) - FS_XL = 2, 2⁵ = 32 => 0.75
+  myIMU.writeRegister(LSM6DS3_ACC_GYRO_INT_DUR2, 0x77);    // 0111 1111 - 7F
+  myIMU.writeRegister(LSM6DS3_ACC_GYRO_WAKE_UP_THS, 0x80); // 1000 0000
+  myIMU.writeRegister(LSM6DS3_ACC_GYRO_MD1_CFG, 0x08);     // 0000 1000
 }
 
 void loop() {
   // poll gpio once each 10 ms
-  delay(10);
+  delay(15);
+
+  uint8_t temp;
+
+  myIMU.readRegister(&temp, LSM6DS3_ACC_GYRO_TAP_SRC);
+  if (temp != 0 && (temp & 0x10) != 0) {
+    disable = !disable;
+  }
+
+  if (disable) return;
 
 
   // Whether button is pressed
