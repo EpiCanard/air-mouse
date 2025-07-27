@@ -114,7 +114,7 @@ const char* handle_gesture(LSM6DS3 myIMU) {
         if (tflOutputTensor->data.f[i] > 0.98) {
           return GESTURES[i];
         }
-        /*
+        /* 
           Serial.print(GESTURES[i]);
           Serial.print(": ");
           Serial.println(tflOutputTensor->data.f[i], 6);

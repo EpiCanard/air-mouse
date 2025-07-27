@@ -14,6 +14,7 @@ typedef enum {
 } touch_tap_t;
 
 typedef enum {
+  OFF,
   MOTION,
   GESTURE
 } duck_mode_t;
